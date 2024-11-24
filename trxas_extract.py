@@ -200,7 +200,6 @@ class Extract:
                 row_out[j*2 + 1] = adiff
 
         self.data_out = data_out
-        print("process_trxas_Energy: save data_out to [%s]..." % fileout)
         if fileout:
             np.savetxt(fileout, data_out, header=' '.join(header_cols), fmt='%.6f', comments='')
 
@@ -264,7 +263,6 @@ class Extract:
                     data_out[i2, 1] += diff / self.num_rows
 
         self.data_out = data_out
-        print("process_trxas_laserd: save data_out to [%s]..." % fileout)
         if fileout:
             np.savetxt(fileout, data_out, header=' '.join(header_cols), fmt='%.6f', comments='')
 
@@ -292,7 +290,6 @@ class Extract:
                     data_out[i_row, i * self.num_orbital + j] = (t1+t2)/2/background[i]
 
         self.data_out = data_out
-        print("process_trxas_Simple: save data_out to [%s]..." % fileout)
         if fileout:
             np.savetxt(fileout, data_out, header=' '.join(header_cols), fmt='%.6f', comments='')
 

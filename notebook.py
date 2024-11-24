@@ -1,6 +1,7 @@
 from trxas_extract import *
 import os.path
 import os
+import matplotlib.pyplot as plt
 
 class G:
     opts = {}
@@ -64,6 +65,16 @@ def extract_all():
                 print("ignoring %s, type mismatch: %s != %s" % (G.type, trxas.type))
         count+=1
     print("Processed %d data files in %s\n" % (count, folder_out))
+
+def plot_avg_file(col):
+    t = np.loadtxt(G.avg_file, skiprows = 1)
+    if t.shape[1] == 2:
+        plt.xlabel('Laser Delay')
+        plt.plot(t[:,0], t[:,1], label='diff', color='tab:blue')
+    else:
+        plt.xlabel('Energy')
+        plt.plot(t[:,0], t[:,col*2+1], label='raw', color='tab:blue')
+        plt.plot(t[:,0], t[:,col*2+2], label='diff', color='tab:red')
 
 def load_files(folder_in):
     G.idx_min = 99999
