@@ -121,11 +121,19 @@ def main():
 
     frm2 = tk.Frame(frm1)
     frm2.pack(side=tk.TOP, pady=10)
+    frm3 = tk.Frame(frm2)
+    frm3.pack(side=tk.LEFT, padx=5)
     G.choice_do_poission = tk.IntVar()
 
-    frm3 = tk.Frame(frm2)
-    frm3.pack(side=tk.LEFT, padx=20)
-    tmp_checkbox = tk.Checkbutton(frm3, variable=G.choice_do_poission, text="Apply Poisson Correction")
+    frm4 = tk.Frame(frm3)
+    frm4.pack(side=tk.LEFT, padx=20)
+    tmp_checkbox = tk.Checkbutton(frm4, variable=G.choice_do_poission, text="Apply Poisson Correction")
+    tmp_checkbox.pack()
+    G.choice_do_avg_bg = tk.IntVar()
+
+    frm4 = tk.Frame(frm3)
+    frm4.pack(side=tk.LEFT, padx=20)
+    tmp_checkbox = tk.Checkbutton(frm4, variable=G.choice_do_avg_bg, text="Average C0 Across Orbitals")
     tmp_checkbox.pack()
     G.entry_rep_rate = None
     G.lbl_rep_rate = None
@@ -332,14 +340,15 @@ def main():
 
     def command_file_avg_plot():
         G.opts['file_avg_plot'] = fd.askopenfilename()
-        G.lbl_file_avg_plot.config(text=shortname(G.opts['file_avg_plot']))
+        G.lbl_file_avg_plot.config(text = G.opts['file_avg_plot'])
+
         t = np.loadtxt(G.opts['file_avg_plot'], skiprows=1)
         if t.shape[1] == 2:
             msg = "Laser Delay: %d rows" % t.shape[0]
         else:
             num_bunches = (t.shape[1] - 1) / 2
             msg = "Energy Scan: %d rows, %d bunches" % (t.shape[0], num_bunches)
-        G.lbl_file_avg_plot_info.config(text=msg)
+        G.lbl_file_avg_plot_info.config(text = msg)
 
     frm3 = tk.Frame(frm2, width=30)
     frm3.pack(side=tk.LEFT, padx=20)
@@ -449,9 +458,9 @@ def command_run():
         trxas = Extract()
         if trxas.read(file_in):
             if G.opts['do_poission']:
-                trxas.normalize(float(G.opts['rep_rate']))
+                trxas.normalize(float(G.opts['rep_rate']), G.opts['do_avg_bg'])
             else:
-                trxas.normalize()
+                trxas.normalize(0, G.opts['do_avg_bg'])
             if G.file_type == "Energy" and trxas.type == "Energy":
                 do_perbunch = not (G.opts['gs_method'] == 'avg bunch GS')
                 trxas.process_energy(file_out, int(G.opts['trigger']), int(G.opts['pre_n_avg']), int(G.opts['aft_n_avg']), int(G.opts['aft_npnt']), do_perbunch)
@@ -485,15 +494,15 @@ def command_avg():
         idx_max = int(RE.m.group(2))
         count, G.avg_file = Extract.average_output(G.opts['folder_avg'], idx_min, idx_max)
         G.opts['file_avg_plot'] = G.avg_file
-        G.lbl_file_avg_plot.config(text=shortname(G.opts['file_avg_plot']))
+        G.lbl_file_avg_plot.config(text = G.opts['file_avg_plot'])
+
         t = np.loadtxt(G.opts['file_avg_plot'], skiprows=1)
         if t.shape[1] == 2:
             msg = "Laser Delay: %d rows" % t.shape[0]
         else:
             num_bunches = (t.shape[1] - 1) / 2
             msg = "Energy Scan: %d rows, %d bunches" % (t.shape[0], num_bunches)
-        G.lbl_file_avg_plot_info.config(text=msg)
-        msgbox("Averaging %d data files -> %s" % (count, G.avg_file))
+        G.lbl_file_avg_plot_info.config(text = msg)
 
 def command_plot():
     if has_matplotlib:
@@ -578,6 +587,8 @@ def init_default():
         G.entry_n_pre_bunch.insert(0, G.opts["n_pre_bunch"])
     if 'do_poission' in G.opts:
         G.choice_do_poission.set(G.opts["do_poission"])
+    if 'do_avg_bg' in G.opts:
+        G.choice_do_avg_bg.set(G.opts["do_avg_bg"])
     if 'gs_method' in G.opts:
         G.choice_gs_method.set(G.opts["gs_method"])
 
@@ -623,6 +634,7 @@ def load_form():
     G.opts['rep_rate'] = G.entry_rep_rate.get()
     G.opts['n_pre_bunch'] = G.entry_n_pre_bunch.get()
     G.opts['do_poission'] = G.choice_do_poission.get()
+    G.opts['do_avg_bg'] = G.choice_do_avg_bg.get()
     G.opts['gs_method'] = G.choice_gs_method.get()
 
 def save_opts():
@@ -667,6 +679,8 @@ def reset_default():
         G.entry_n_pre_bunch.insert(0, G.opts["n_pre_bunch"])
     if 'do_poission' in G.opts:
         G.choice_do_poission.set(G.opts["do_poission"])
+    if 'do_avg_bg' in G.opts:
+        G.choice_do_avg_bg.set(G.opts["do_avg_bg"])
     if 'gs_method' in G.opts:
         G.choice_gs_method.set(G.opts["gs_method"])
 

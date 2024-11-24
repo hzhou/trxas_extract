@@ -118,7 +118,7 @@ class Extract:
                 self.data[i, j] = float(t)
         return True
 
-    def normalize(self, max_count=0):
+    def normalize(self, max_count=0, do_avg_bg=True):
         i0 = self.idxs['c0o0b0']
         i1 = self.idxs['c1o0b0']
         i2 = self.idxs['c2o0b0']
@@ -128,16 +128,21 @@ class Extract:
                 for j in range(i0,self.num_cols):
                     P1 = self.data[i,j] / (max_count * self.data[i,i_sec])
                     self.data[i,j] = -math.log(1.0 - P1)
-        for i in range(self.num_rows):
-            avgs = []
-            for j in range(self.num_bunches):
-                sum = 0.0
-                for k in range(self.num_orbital):
-                    sum += self.data[i, i0 + k * self.num_bunches + j]
-                avgs.append(sum / self.num_orbital)
-            for j in range(self.num_bunches * self.num_orbital):
-                self.data[i, i1 + j] /= avgs[j % self.num_bunches]
-                self.data[i, i2 + j] /= avgs[j % self.num_bunches]
+        for i in range(1,self.num_rows):
+            if do_avg_bg:
+                avgs = []
+                for j in range(self.num_bunches):
+                    sum = 0.0
+                    for k in range(self.num_orbital):
+                        sum += self.data[i, i0 + k * self.num_bunches + j]
+                    avgs.append(sum / self.num_orbital)
+                for j in range(self.num_bunches * self.num_orbital):
+                    self.data[i, i1 + j] /= avgs[j % self.num_bunches]
+                    self.data[i, i2 + j] /= avgs[j % self.num_bunches]
+            else:
+                for j in range(self.num_bunches * self.num_orbital):
+                    self.data[i, i1 + j] /= self.data[i, i0 + j]
+                    self.data[i, i2 + j] /= self.data[i, i0 + j]
         self.normalized = True
 
     def process_energy(self, fileout, trig, pre_n_avg, aft_n_avg, n_pnt, do_perbunch=True):
