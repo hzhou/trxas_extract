@@ -252,6 +252,8 @@ def main():
     frm1 = tk.Frame(G.window, relief='groove', borderwidth=2)
     G.frm_Average = frm1
 
+    frm = tk.Frame(frm1, height=20)
+    frm.pack(side=tk.TOP)
     frm2 = tk.Frame(frm1)
     frm2.pack(side=tk.TOP, pady=1)
     G.opts['file_avg'] = ""
@@ -319,6 +321,35 @@ def main():
     btn = tk.Button(frm2, text="Run Average", command=command_avg)
     btn.pack()
 
+    frm = tk.Frame(frm1, height=20)
+    frm.pack(side=tk.TOP)
+    frm2 = tk.Frame(frm1)
+    frm2.pack(side=tk.TOP, pady=1)
+    G.opts['file_avg_plot'] = ""
+    G.btn_file_avg_plot = None
+    G.lbl_file_avg_plot = None
+    G.lbl_file_avg_plot_info = None
+
+    def command_file_avg_plot():
+        G.opts['file_avg_plot'] = fd.askopenfilename()
+        G.lbl_file_avg_plot.config(text=shortname(G.opts['file_avg_plot']))
+        t = np.loadtxt(G.opts['file_avg_plot'], skiprows=1)
+        if t.shape[1] == 2:
+            msg = "Laser Delay: %d rows" % t.shape[0]
+        else:
+            num_bunches = (t.shape[1] - 1) / 2
+            msg = "Energy Scan: %d rows, %d bunches" % (t.shape[0], num_bunches)
+        G.lbl_file_avg_plot_info.config(text=msg)
+
+    frm3 = tk.Frame(frm2, width=30)
+    frm3.pack(side=tk.LEFT, padx=20)
+    G.btn_file_avg_plot = tk.Button(frm3, text="Select Avg Data File", command=command_file_avg_plot)
+    G.btn_file_avg_plot.pack()
+    G.lbl_file_avg_plot = tk.Label(frm3, text=G.opts['file_avg_plot'])
+    G.lbl_file_avg_plot.pack()
+    G.lbl_file_avg_plot_info = tk.Label(frm3, text="")
+    G.lbl_file_avg_plot_info.pack()
+
     frm2 = tk.Frame(frm1)
     frm2.pack(side=tk.TOP, pady=1)
     G.entry_plot_col = None
@@ -366,6 +397,7 @@ def check_folder(folder):
         G.entry_range.insert(0, "%s-%s" % (G.idx_min, G.idx_max))
     G.lbl_folder_in.config(text=shortname(folder))
     G.btn_folder_in.config(text = "Change Input Folder")
+    G.lbl_folder_in_info.config(text="%d data files" % len(G.files))
 
 def check_file(file):
     G.lbl_file_in.config(text=shortname(file))
@@ -452,6 +484,15 @@ def command_avg():
         idx_min = int(RE.m.group(1))
         idx_max = int(RE.m.group(2))
         count, G.avg_file = Extract.average_output(G.opts['folder_avg'], idx_min, idx_max)
+        G.opts['file_avg_plot'] = G.avg_file
+        G.lbl_file_avg_plot.config(text=shortname(G.opts['file_avg_plot']))
+        t = np.loadtxt(G.opts['file_avg_plot'], skiprows=1)
+        if t.shape[1] == 2:
+            msg = "Laser Delay: %d rows" % t.shape[0]
+        else:
+            num_bunches = (t.shape[1] - 1) / 2
+            msg = "Energy Scan: %d rows, %d bunches" % (t.shape[0], num_bunches)
+        G.lbl_file_avg_plot_info.config(text=msg)
         msgbox("Averaging %d data files -> %s" % (count, G.avg_file))
 
 def command_plot():
@@ -472,36 +513,42 @@ def command_plot():
         else:
             return 0
 
-    col = int(G.entry_plot_col.get()) * 2 + 1
-    if col > 0:
-        t = np.loadtxt(G.avg_file, skiprows=1)
-        figure = Figure(figsize=(5,3), dpi=100)
-        G.plt = figure.add_subplot(1, 1, 1)
-        G.plt2 = G.plt.twinx()
+    avg_file = G.opts['file_avg_plot']
+    t = np.loadtxt(avg_file, skiprows=1)
+    figure = Figure(figsize=(5,3), dpi=100)
+    G.plt = figure.add_subplot(1, 1, 1)
+    G.plt2 = G.plt.twinx()
 
-        G.plot_window = tk.Toplevel(G.window)
-        G.plot_window.title("Plot Average Data")
+    G.plot_window = tk.Toplevel(G.window)
+    G.plot_window.geometry('1024x768')
+    G.plot_window.title("Plot Average Data")
 
-        G.canvas = FigureCanvasTkAgg(figure, G.plot_window)
-        G.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        if t.shape[1] == 2:
-            G.plt.set_xlabel('Laser Delay')
-            G.plt.set_ylabel('diff', color='tab:blue')
-            G.plt2.set_axis_off()
+    G.canvas = FigureCanvasTkAgg(figure, G.plot_window)
+    G.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=11, pady=10)
+    if t.shape[1] == 2:
+        G.plot_window.title("Laser Delay - " + avg_file)
+        G.plt.set_xlabel('Laser Delay')
+        G.plt.set_ylabel('diff', color='tab:blue')
+        G.plt2.set_axis_off()
 
-            G.plt.clear()
-            G.plt.plot(t[:,0], t[:,1], color='tab:blue')
-        else:
-            G.plt.set_xlabel('Energy')
-            G.plt.set_ylabel('raw', color='tab:blue')
-            G.plt2.set_axis_on()
-            G.plt2.set_ylabel('diff', color='tab:red')
+        G.plt.clear()
+        G.plt.plot(t[:,0], t[:,1], color='tab:blue')
+    else:
+        G.plt.set_xlabel('Energy')
+        G.plt.set_ylabel('raw', color='tab:blue')
+        G.plt2.set_axis_on()
+        G.plt2.set_ylabel('diff', color='tab:red')
 
-            G.plt.clear()
-            G.plt.plot(t[:,0], t[:,col], color='tab:blue')
-            G.plt2.clear()
-            G.plt2.plot(t[:,0], t[:,col+1], color='tab:red')
-        G.canvas.draw()
+        col = int(G.entry_plot_col.get())
+        G.plot_window.title("Energy Scan - %s - Column %d" % (avg_file, col))
+
+        j = col * 2 + 1
+        G.plt.clear()
+        G.plt.plot(t[:,0], t[:,j], label='raw', color='tab:blue')
+        G.plt2.clear()
+        G.plt2.plot(t[:,0], t[:,j+1], label='diff', color='tab:red')
+
+    G.canvas.draw()
 
 def init_default():
     load_opts()
