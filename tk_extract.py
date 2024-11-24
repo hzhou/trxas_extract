@@ -9,31 +9,38 @@ import tkinter.messagebox as msgbox
 import os.path
 import os, os.path
 
+try:
+    import matplotlib
+    has_matplotlib=True
+except ImportError:
+    print('Missing module matplotlib')
+    has_matplotlib=False
+try:
+    from tktooltip import ToolTip
+    has_ToolTip=True
+except ImportError:
+    print('Missing module ToolTip from tktooltip')
+    has_ToolTip=False
+
 class G:
     opts = {}
 
 G.file_type=""
-$try_import matplotlib
 def main():
     if not os.path.exists("trxas_extract.py"):
         os.chdir(os.path.dirname(sys.argv[0]))
     if not os.path.exists("trxas_extract.py"):
         print("Missing trxas_extract.py. Run from the script folder.")
-    $try_import ToolTip from tktooltip
 
-    window = tk.Tk()
-    window.title("XTA MXP data process (TRR Group)")
-    window.resizable(True, True)
-    window.geometry('800x600')
+    G.window = tk.Tk()
+    G.window.title("XTA MXP data process (TRR Group)")
+    G.window.resizable(True, True)
+    G.window.geometry('800x600')
 
-    frm = tk.Frame(window, height=20)
+    frm = tk.Frame(G.window, height=20)
     frm.pack(side=tk.TOP)
-    frm1 = tk.Frame(window)
+    frm1 = tk.Frame(G.window)
     frm1.pack(side=tk.LEFT, padx=10)
-    btn_a = tk.Button(frm1, text="Simple", command=command_Simple)
-    btn_a.pack()
-    frm = tk.Frame(frm1, height=20)
-    frm.pack(side=tk.TOP)
     btn_A = tk.Button(frm1, text="Process", command=command_Process)
     btn_A.pack()
     frm = tk.Frame(frm1, height=20)
@@ -42,99 +49,11 @@ def main():
     btn_B.pack()
 
     if has_ToolTip:
-        ToolTip(btn_a, msg="Switch to the form to process the data by simple background")
         ToolTip(btn_A, msg="Switch to the form to process the data as Energy scan or laserd data")
         ToolTip(btn_B, msg="Switch to the form to average the processed data")
 
     G.frm_current = None
-    frm1 = tk.Frame(window, relief='groove', borderwidth=2)
-    G.frm_Simple = frm1
-    frm2 = tk.Frame(frm1)
-    frm2.pack(side=tk.TOP, pady=5)
-    G.opts['file_in_a'] = ""
-    G.btn_file_in_a = None
-    G.lbl_file_in_a = None
-    G.lbl_file_in_a_info = None
-
-    def command_file_in_a():
-        G.opts['file_in_a'] = fd.askopenfilename()
-        G.opts['file_in'] = G.opts['file_in_a']
-        if G.opts['file_in'] and os.path.exists(G.opts['file_in']):
-            G.opts['folder_in'] = os.path.dirname(G.opts['file_in'])
-            check_folder_simple(G.opts['folder_in'])
-            check_file_simple(G.opts['file_in'])
-
-    frm3 = tk.Frame(frm2, width=30)
-    frm3.pack(side=tk.LEFT, padx=20)
-    G.btn_file_in_a = tk.Button(frm3, text="Check Data File", command=command_file_in_a)
-    G.btn_file_in_a.pack()
-    G.lbl_file_in_a = tk.Label(frm3, text=G.opts['file_in_a'])
-    G.lbl_file_in_a.pack()
-    G.lbl_file_in_a_info = tk.Label(frm3, text="")
-    G.lbl_file_in_a_info.pack()
-    frm2 = tk.Frame(frm1)
-    frm2.pack(side=tk.TOP, pady=5)
-    G.opts['folder_in_a'] = ""
-    G.btn_folder_in_a = None
-    G.lbl_folder_in_a = None
-    G.lbl_folder_in_a_info = None
-
-    def command_folder_in_a():
-        G.opts['folder_in_a'] = fd.askdirectory()
-        G.opts['folder_in'] = G.opts['folder_in_a']
-        check_folder_simple(G.opts['folder_in'])
-        if G.name:
-            check_file_simple(G.opts['file_in'])
-
-    frm3 = tk.Frame(frm2, width=30)
-    frm3.pack(side=tk.LEFT, padx=20)
-    G.btn_folder_in_a = tk.Button(frm3, text="Select Input Folder", command=command_folder_in_a)
-    G.btn_folder_in_a.pack()
-    G.lbl_folder_in_a = tk.Label(frm3, text=G.opts['folder_in_a'])
-    G.lbl_folder_in_a.pack()
-    G.lbl_folder_in_a_info = tk.Label(frm3, text="")
-    G.lbl_folder_in_a_info.pack()
-    frm2 = tk.Frame(frm1)
-    frm2.pack(side=tk.TOP, pady=5)
-    G.opts['folder_out_a'] = ""
-    G.btn_folder_out_a = None
-    G.lbl_folder_out_a = None
-    G.lbl_folder_out_a_info = None
-
-    def command_folder_out_a():
-        G.opts['folder_out_a'] = fd.askdirectory()
-        G.opts['folder_out'] = G.opts['folder_out_a']
-        G.lbl_folder_out_a.config(text=shortname(G.opts['folder_out']))
-        G.btn_folder_out_a.config(text = "Change Output Folder")
-
-    frm3 = tk.Frame(frm2, width=30)
-    frm3.pack(side=tk.LEFT, padx=20)
-    G.btn_folder_out_a = tk.Button(frm3, text="Select Output Folder", command=command_folder_out_a)
-    G.btn_folder_out_a.pack()
-    G.lbl_folder_out_a = tk.Label(frm3, text=G.opts['folder_out_a'])
-    G.lbl_folder_out_a.pack()
-    G.lbl_folder_out_a_info = tk.Label(frm3, text="")
-    G.lbl_folder_out_a_info.pack()
-
-    frm2 = tk.Frame(frm1)
-    frm2.pack(side=tk.TOP, pady=10)
-    G.entry_range_a = None
-    G.lbl_range_a = None
-
-    frm3 = tk.Frame(frm2, width=40)
-    frm3.pack(side=tk.LEFT, padx=20)
-    G.lbl_range_a = tk.Label(frm3, text="File index range\n(min - max)")
-    G.lbl_range_a.pack()
-    G.entry_range_a = tk.Entry(frm3, width=15)
-    G.entry_range_a.pack()
-    frm = tk.Frame(frm3, width=20)
-    frm.pack(side=tk.LEFT)
-
-    frm2 = tk.Frame(frm1)
-    frm2.pack(side=tk.TOP, pady=10)
-    btn_process_simple = tk.Button(frm2, text="Extract Data", command=command_simple)
-    btn_process_simple.pack()
-    frm1 = tk.Frame(window, relief='groove', borderwidth=2)
+    frm1 = tk.Frame(G.window, relief='groove', borderwidth=2)
     G.frm_Process = frm1
     frm2 = tk.Frame(frm1)
     frm2.pack(side=tk.TOP, pady=5)
@@ -330,7 +249,7 @@ def main():
     frm3.pack(side=tk.LEFT, padx=20)
     btn_reset = tk.Button(frm3, text="Reset", command=command_reset)
     btn_reset.pack()
-    frm1 = tk.Frame(window, relief='groove', borderwidth=2)
+    frm1 = tk.Frame(G.window, relief='groove', borderwidth=2)
     G.frm_Average = frm1
 
     frm2 = tk.Frame(frm1)
@@ -425,7 +344,7 @@ def main():
 
     init_default()
     command_Process()
-    window.mainloop()
+    G.window.mainloop()
 
 # ---- subroutines --------------------------------------------
 def command_Process():
@@ -440,98 +359,41 @@ def command_Average():
     G.frm_current = G.frm_Average
     G.frm_current.pack(pady = 5)
 
-def command_Simple():
-    if G.frm_current:
-        G.frm_current.pack_forget()
-    G.frm_current = G.frm_Simple
-    G.frm_current.pack(pady = 5)
-
-def check_folder_simple(folder):
+def check_folder(folder):
     load_files(folder)
     if G.name:
         G.entry_range.delete(0, tk.END)
         G.entry_range.insert(0, "%s-%s" % (G.idx_min, G.idx_max))
-
     G.lbl_folder_in.config(text=shortname(folder))
     G.btn_folder_in.config(text = "Change Input Folder")
 
-def check_file_simple(file):
+def check_file(file):
     G.lbl_file_in.config(text=shortname(file))
+
     trxas = Extract()
     trxas.read(file)
     msg = "%d channels, %d orbitals, %d bunches, %d rows" % (trxas.c_max-trxas.c_min+1, trxas.o_max-trxas.o_min+1, trxas.b_max-trxas.b_min+1, trxas.num_rows)
+
     G.lbl_file_in_info.config(text=msg)
+
+    if trxas.type != G.file_type:
+        G.file_type = trxas.type
+        if G.file_type == "Energy":
+            if G.subfrm_a:
+                G.subfrm_a.pack_forget()
+            G.subfrm_a = G.subfrm_Energy
+            G.subfrm_a.pack(side=tk.LEFT)
+        else:
+            if G.subfrm_a:
+                G.subfrm_a.pack_forget()
+            G.subfrm_a = G.subfrm_laserd
+            G.subfrm_a.pack(side=tk.LEFT)
 
 def shortname(str):
     if len(str) > 100:
         return "..." + str[-100:]
     else:
         return str
-
-def command_simple():
-    G.opts['range'] = G.entry_range_a.get()
-    if RE.match(r'(\d+)-(\d+)', G.opts['range']):
-        G.idx_min = int(RE.m.group(1))
-        G.idx_max = int(RE.m.group(2))
-
-    if not os.path.exists(G.opts['folder_out']):
-        os.makedirs(G.opts['folder_out'])
-
-    count = 0
-    for file_in in G.files:
-        if RE.match(r'(.*)-(\d+)$', file_in):
-            idx = int(RE.m.group(2))
-            if idx < G.idx_min or idx > G.idx_max:
-                continue
-        file_out = get_file_out(file_in)
-
-        trxas = Extract()
-        if trxas.read(file_in):
-            trxas.process_simple(file_out)
-        count+=1
-    msgbox("Processed %d data files in %s\n" % (count, G.opts['folder_out']))
-
-def check_folder(folder):
-    load_files(folder)
-    if G.frm_current == G.frm_Simple:
-        if G.name:
-            G.entry_range_a.delete(0, tk.END)
-            G.entry_range_a.insert(0, "%s-%s" % (G.idx_min, G.idx_max))
-        G.lbl_folder_in_a.config(text=shortname(folder))
-        G.btn_folder_in_a.config(text = "Change Input Folder")
-    else:
-        if G.name:
-            G.entry_range.delete(0, tk.END)
-            G.entry_range.insert(0, "%s-%s" % (G.idx_min, G.idx_max))
-        G.lbl_folder_in.config(text=shortname(folder))
-        G.btn_folder_in.config(text = "Change Input Folder")
-
-def check_file(file):
-    if G.frm_current == G.frm_Simple:
-        G.lbl_file_in_a.config(text=shortname(file))
-    else:
-        G.lbl_file_in.config(text=shortname(file))
-
-    trxas = Extract()
-    trxas.read(file)
-    msg = "%d channels, %d orbitals, %d bunches, %d rows" % (trxas.c_max-trxas.c_min+1, trxas.o_max-trxas.o_min+1, trxas.b_max-trxas.b_min+1, trxas.num_rows)
-    if G.frm_current == G.frm_Simple:
-        G.lbl_file_in_a_info.config(text=msg)
-    else:
-        G.lbl_file_in_info.config(text=msg)
-
-        if trxas.type != G.file_type:
-            G.file_type = trxas.type
-            if G.file_type == "Energy":
-                if G.subfrm_a:
-                    G.subfrm_a.pack_forget()
-                G.subfrm_a = G.subfrm_Energy
-                G.subfrm_a.pack(side=tk.LEFT)
-            else:
-                if G.subfrm_a:
-                    G.subfrm_a.pack_forget()
-                G.subfrm_a = G.subfrm_laserd
-                G.subfrm_a.pack(side=tk.LEFT)
 
 def command_run():
     load_form()
@@ -598,6 +460,8 @@ def command_plot():
         from matplotlib.figure import Figure
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
         matplotlib.use("TkAgg")
+    else:
+        return
 
     def get_col():
         col = G.entry_plot_col.get()
@@ -611,13 +475,15 @@ def command_plot():
     col = int(G.entry_plot_col.get()) * 2 + 1
     if col > 0:
         t = np.loadtxt(G.avg_file, skiprows=1)
-        if not G.plt:
-            figure = Figure(figsize=(5,3), dpi=100)
-            G.plt = figure.add_subplot(1, 1, 1)
-            G.plt2 = G.plt.twinx()
+        figure = Figure(figsize=(5,3), dpi=100)
+        G.plt = figure.add_subplot(1, 1, 1)
+        G.plt2 = G.plt.twinx()
 
-            G.canvas = FigureCanvasTkAgg(figure, G.frm_Plot)
-            G.canvas.get_tk_widget().pack()
+        G.plot_window = tk.Toplevel(G.window)
+        G.plot_window.title("Plot Average Data")
+
+        G.canvas = FigureCanvasTkAgg(figure, G.plot_window)
+        G.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         if t.shape[1] == 2:
             G.plt.set_xlabel('Laser Delay')
             G.plt.set_ylabel('diff', color='tab:blue')
@@ -700,12 +566,6 @@ def load_files(folder_in):
                 if int(G.idx_max) < int(idx):
                     G.idx_max = idx
 
-def get_file_out(file_in):
-    return os.path.join(G.opts['folder_out'], os.path.basename(file_in) + '.txt')
-
-def msgbox(msg):
-    tk.messagebox.showinfo(message=msg)
-
 def load_form():
     G.opts['trigger'] = G.entry_trigger.get()
     G.opts['range'] = G.entry_range.get()
@@ -723,6 +583,12 @@ def save_opts():
     for k in G.opts:
         f.write("%s: %s\n" % (k, G.opts[k]))
     f.close()
+
+def get_file_out(file_in):
+    return os.path.join(G.opts['folder_out'], os.path.basename(file_in) + '.txt')
+
+def msgbox(msg):
+    tk.messagebox.showinfo(message=msg)
 
 def reset_default():
     G.opts = {'n_pre_bunch':1, 'folder_in':'', 'folder_out':''}

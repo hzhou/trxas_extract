@@ -266,33 +266,6 @@ class Extract:
         if fileout:
             np.savetxt(fileout, data_out, header=' '.join(header_cols), fmt='%.6f', comments='')
 
-    def process_simple(self, fileout):
-        header_cols = []
-        for i in range(self.num_bunches):
-            for j in range(self.num_orbital):
-                header_cols.append("b%d-o%d" % (i, j))
-        data_out = np.empty([self.num_rows, len(header_cols)])
-        i0 = self.idxs['c0o0b0']
-        i1 = self.idxs['c1o0b0']
-        i2 = self.idxs['c2o0b0']
-        for i_row in range(self.num_rows):
-            row_in = self.data[i_row,:]
-            background = []
-            for i in range(self.num_bunches):
-                a0 = 0
-                for j in range(self.num_orbital):
-                    a0 += row_in[i0 + i + j * self.o_jump]
-                background.append(a0 / self.num_orbital)
-            for i in range(self.num_bunches):
-                for j in range(self.num_orbital):
-                    t1=row_in[i1 + i + j * self.o_jump]
-                    t2=row_in[i1 + i + j * self.o_jump]
-                    data_out[i_row, i * self.num_orbital + j] = (t1+t2)/2/background[i]
-
-        self.data_out = data_out
-        if fileout:
-            np.savetxt(fileout, data_out, header=' '.join(header_cols), fmt='%.6f', comments='')
-
 def main():
     t = Extract()
     t.read("laserd/11022024-full-00237")
